@@ -20,10 +20,10 @@ include(ECMSetupVersion)
 include(ECMGeneratePriFile)
 include(CMakeDependentOption)
 
-option(BUILD_WITH_QT6 "Build qtkeychain with Qt 6" OFF)
+option(BUILD_WITH_QT6 "Build qtkeychain with Qt 6" ON)
 option(BUILD_TEST_APPLICATION "Build test application" OFF)
 option(BUILD_TRANSLATIONS "Build translations" ON)
-option(BUILD_SHARED_LIBS "Build dynamic library" ON)
+option(BUILD_SHARED_LIBS "Build dynamic library" OFF)
 if(QTKEYCHAIN_STATIC)
     set(BUILD_SHARED_LIBS OFF)
     message(WARNING "QTKEYCHAIN_STATIC is deprecated. Use BUILD_SHARED_LIBS=OFF instead.")
@@ -200,7 +200,8 @@ set(qtkeychain_TR_FILES
       translations/qtkeychain_zh.ts
 )
 
-set(QTKEYCHAIN_TARGET_NAME qt${QTKEYCHAIN_VERSION_INFIX}keychain)
+#set(QTKEYCHAIN_TARGET_NAME qt${QTKEYCHAIN_VERSION_INFIX}keychain)
+set(QTKEYCHAIN_TARGET_NAME qtkeychain)
 add_library(${QTKEYCHAIN_TARGET_NAME} ${qtkeychain_SOURCES} ${qtkeychain_MOC_OUTFILES} ${qtkeychain_QM_FILES})
 if(WIN32)
     set_target_properties( ${QTKEYCHAIN_TARGET_NAME} PROPERTIES DEBUG_POSTFIX "d" )
