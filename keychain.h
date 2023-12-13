@@ -9,12 +9,14 @@
 #ifndef KEYCHAIN_H
 #define KEYCHAIN_H
 
-//#if !defined(QTKEYCHAIN_NO_EXPORT)
-//#include "qkeychain_export.h"
-//#else
+#if !defined(QTKEYCHAIN_NO_EXPORT)
+#include "qkeychain_export.h"
+#else
 #define QKEYCHAIN_EXPORT
-//#endif
+#endif
 
+#include <QApplication>
+#include <QQmlEngine>
 #include <QtCore/QObject>
 #include <QtCore/QString>
 
@@ -23,6 +25,7 @@ class QSettings;
 #define QTKEYCHAIN_VERSION 0x000100
 
 namespace QKeychain {
+    Q_NAMESPACE
 
 /**
  * Error codes
@@ -38,15 +41,20 @@ enum Error {
     OtherError /**< Something else went wrong (errorString() might provide details) */
 };
 
-class JobExecutor;
-class JobPrivate;
+    class JobExecutor;
+    class JobPrivate;
 
 /**
  * @brief Abstract base class for all QKeychain jobs.
  */
 class QKEYCHAIN_EXPORT Job : public QObject {
     Q_OBJECT
+    Q_PROPERTY(QString service READ service WRITE setService)
+    Q_PROPERTY(QString key READ key WRITE setKey)
+    Q_PROPERTY(bool autoDelete READ autoDelete WRITE setAutoDelete)
+    Q_PROPERTY(Error error READ error)
 public:
+    Q_ENUMS(Error)
     ~Job() override;
 
     /**
@@ -86,32 +94,33 @@ public:
      *
      * @see finished()
      */
-    void start();
+    Q_INVOKABLE void start();
 
-    QString service() const;
+    Q_INVOKABLE QString service() const;
+    Q_INVOKABLE void setService(const QString &serviceName);
 
     /**
      * @note Call this method only after finished() has been emitted.
      * @return The error code of the job (0 if no error).
      */
-    Error error() const;
+    Q_INVOKABLE Error error() const;
 
     /**
      * @return An error message that might provide details if error() returns OtherError.
      */
-    QString errorString() const;
+    Q_INVOKABLE QString errorString() const;
 
     /**
      * @return Whether this job autodeletes itself once finished() has been emitted. Default is true.
      * @see setAutoDelete()
      */
-    bool autoDelete() const;
+    Q_INVOKABLE bool autoDelete() const;
 
     /**
      * Set whether this job should autodelete itself once finished() has been emitted.
      * @see autoDelete()
      */
-    void setAutoDelete( bool autoDelete );
+    Q_INVOKABLE void setAutoDelete( bool autoDelete );
 
     /**
      * @return Whether this job will use plaintext storage on unsupported platforms. Default is false.
@@ -129,14 +138,14 @@ public:
      * @return The string used as key by this job.
      * @see setKey()
      */
-    QString key() const;
+    Q_INVOKABLE QString key() const;
 
     /**
      * Set the @p key that this job will use to read or write data from/to the keychain.
      * The key can be an empty string.
      * @see key()
      */
-    void setKey( const QString& key );
+    Q_INVOKABLE void setKey( const QString& key );
 
     void emitFinished();
     void emitFinishedWithError(Error, const QString& errorString);
@@ -162,12 +171,22 @@ private:
 protected:
     JobPrivate* const d;
 
-friend class JobExecutor;
-friend class JobPrivate;
-friend class ReadPasswordJobPrivate;
-friend class WritePasswordJobPrivate;
-friend class DeletePasswordJobPrivate;
+    friend class JobExecutor;
+    friend class JobPrivate;
+    friend class ReadPasswordJobPrivate;
+    friend class WritePasswordJobPrivate;
+    friend class DeletePasswordJobPrivate;
 };
+
+// ------------------------------------------------------------------
+//
+//  Error QML object
+//
+static void setQMLErrorJob(){
+    qRegisterMetaType<Error>("Error");
+}
+Q_COREAPP_STARTUP_FUNCTION(setQMLErrorJob);
+// ------------------------------------------------------------------
 
 class ReadPasswordJobPrivate;
 
@@ -185,7 +204,7 @@ public:
      * @param service The service string used by this job (can be empty).
      * @param parent The parent of this job.
      */
-    explicit ReadPasswordJob( const QString& service, QObject* parent=nullptr );
+    explicit ReadPasswordJob( const QString& service="", QObject* parent=nullptr );
     ~ReadPasswordJob() override;
 
     /**
@@ -200,11 +219,23 @@ public:
      * @warning Returns meaningless data if the data was stored as binary data.
      * @see WritePasswordJob::setTextData()
      */
-    QString textData() const;
+    Q_INVOKABLE QString textData() const;
 
 private:
     friend class QKeychain::ReadPasswordJobPrivate;
 };
+
+// ------------------------------------------------------------------
+//
+//  Read QML object
+//
+static void setQMLReadJob(){
+    qmlRegisterType<QKeychain::ReadPasswordJob>("QtKeychain",
+                                                1,0,
+                                                "ReadPasswordJob");
+}
+Q_COREAPP_STARTUP_FUNCTION(setQMLReadJob);
+// ------------------------------------------------------------------
 
 class WritePasswordJobPrivate;
 
@@ -222,26 +253,38 @@ public:
      * @param service The service string used by this job (can be empty).
      * @param parent The parent of this job.
      */
-    explicit WritePasswordJob( const QString& service, QObject* parent=nullptr );
+    explicit WritePasswordJob( const QString& service="", QObject* parent=nullptr );
     ~WritePasswordJob() override;
 
     /**
      * Set the @p data that the job will store in the keychain as binary data.
      * @warning setBinaryData() and setTextData() are mutually exclusive.
      */
-    void setBinaryData( const QByteArray& data );
+    Q_INVOKABLE void setBinaryData( const QByteArray& data );
 
     /**
      * Set the @p data that the job will store in the keychain as string.
      * Typically @p data is a password.
      * @warning setBinaryData() and setTextData() are mutually exclusive.
      */
-    void setTextData( const QString& data );
+    Q_INVOKABLE void setTextData( const QString& data );
 
 private:
 
     friend class QKeychain::WritePasswordJobPrivate;
 };
+
+// ------------------------------------------------------------------
+//
+//  Write QML object
+//
+static void setQMLWriteJob(){
+    qmlRegisterType<QKeychain::WritePasswordJob>("QtKeychain",
+                                                 1,0,
+                                                 "WritePasswordJob");
+}
+Q_COREAPP_STARTUP_FUNCTION(setQMLWriteJob);
+// ------------------------------------------------------------------
 
 class DeletePasswordJobPrivate;
 

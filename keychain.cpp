@@ -24,6 +24,11 @@ QString Job::service() const {
     return d->service;
 }
 
+void Job::setService(const QString &serviceName)
+{
+    d->service = serviceName;
+}
+
 QSettings* Job::settings() const {
     return d->settings;
 }

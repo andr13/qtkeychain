@@ -91,7 +91,7 @@ if (Qt5Core_FOUND AND NOT BUILD_WITH_QT6)
   set(QTCORE_LIBRARIES ${Qt5Core_LIBRARIES})
   include_directories(${Qt5Core_INCLUDE_DIRS})
 else()
-  find_package(Qt6 COMPONENTS Core REQUIRED)
+  find_package(Qt6 REQUIRED COMPONENTS Gui Core Widgets Qml)
   set(QTKEYCHAIN_VERSION_INFIX 6)
 
 
@@ -202,7 +202,8 @@ set(qtkeychain_TR_FILES
 
 #set(QTKEYCHAIN_TARGET_NAME qt${QTKEYCHAIN_VERSION_INFIX}keychain)
 set(QTKEYCHAIN_TARGET_NAME qtkeychain)
-add_library(${QTKEYCHAIN_TARGET_NAME} ${qtkeychain_SOURCES} ${qtkeychain_MOC_OUTFILES} ${qtkeychain_QM_FILES})
+add_library(${QTKEYCHAIN_TARGET_NAME} ${qtkeychain_SOURCES} ${qtkeychain_MOC_OUTFILES} ${qtkeychain_QM_FILES}
+    qkeychain_export.h)
 if(WIN32)
     set_target_properties( ${QTKEYCHAIN_TARGET_NAME} PROPERTIES DEBUG_POSTFIX "d" )
 endif()
@@ -240,6 +241,9 @@ if ( BUILD_TRANSLATIONS )
     endif()
 endif( BUILD_TRANSLATIONS )
 
+if(BUILD_WITH_QT6)
+    list(APPEND qtkeychain_LIBRARIES_PRIVATE Qt6::Core Qt6::Widgets Qt6::Qml)
+endif()
 target_link_libraries(${QTKEYCHAIN_TARGET_NAME} PUBLIC ${qtkeychain_LIBRARIES} PRIVATE ${qtkeychain_LIBRARIES_PRIVATE})
 if(NOT INTERFACE_INCLUDE_SUFFIX)
     set(INTERFACE_INCLUDE_SUFFIX include)
